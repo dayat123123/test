@@ -16,6 +16,7 @@ var clientTag = "";
 void main() async {
   // await ada().function();
   await RabbitMqConnection.getInstance();
+  // await RabbitMQConnection.instance.connect();
   mess = makeMassage2.createLoginRequst(
       clientTag: clientTag, loginId: "Dayat", loginPassword: "123456");
   clientTag = RandomGenerate.generateRandomTag(14);
