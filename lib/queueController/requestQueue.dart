@@ -10,7 +10,7 @@ class queuesRequest {
     reqsss.add(data);
     while (reqsss.isNotEmpty) {
       Uint8List dataNext = reqsss.removeFirst();
-      // await Streams.addData(dataNext);
+
       await RabbitMqConnection.sendnreceivemassage(
         dataNext,
         clientTag,
@@ -18,3 +18,13 @@ class queuesRequest {
     }
   }
 }
+
+// class queuesRealtime {
+//   static addQueue(data) async {
+//     reqsss.add(data);
+//     while (reqsss.isNotEmpty) {
+//       // await Streams.addData(dataNext);
+//       await RabbitMqConnection.exchangesrealtime();
+//     }
+//   }
+// }

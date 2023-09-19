@@ -1,22 +1,54 @@
-import 'dart:isolate';
+import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:coba_coba/helper/genrandomClientag.dart';
+import 'package:coba_coba/Getxcontroller/queueController.dart';
+import 'package:coba_coba/constant.dart';
+import 'package:coba_coba/main.dart';
 import 'package:coba_coba/makemessage.dart';
-import 'package:coba_coba/otherpage.dart';
-import 'package:coba_coba/queueController/reqQueue.dart';
-
 import 'package:coba_coba/queueController/requestQueue.dart';
+import 'package:coba_coba/service/snappy.dart';
 import 'package:coba_coba/singleton_connection.dart';
-import 'package:dart_amqp/dart_amqp.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+// ...
 
 import 'package:flutter/material.dart';
-import 'constant.dart';
-import 'helper/encryptheader.dart';
-import 'main.dart';
-import 'package:http/http.dart' as http;
+import 'package:get/get.dart';
+import 'dart:ffi';
+import 'package:ffi/ffi.dart';
 
-import 'newConnection.dart';
+final DynamicLibrary snappy = DynamicLibrary.open('assets/snappy/snappy.dll');
+
+// Deklarasikan fungsi-fungsi Snappy yang ingin Anda gunakan
+typedef snappy_compress_func = Int32 Function(
+    Pointer<Utf8> input_data,
+    IntPtr input_length,
+    Pointer<Utf8> output_buffer,
+    Pointer<IntPtr> output_length);
+
+typedef snappy_decompress_func = Int32 Function(
+    Pointer<Utf8> compressed_data,
+    IntPtr compressed_length,
+    Pointer<Utf8> output_buffer,
+    Pointer<IntPtr> output_length);
+
+// Impor fungsi-fungsi Snappy untuk digunakan
+final snappy_compress = snappy.lookupFunction<
+    snappy_compress_func,
+    int Function(
+        Pointer<Utf8> input_data,
+        int input_length,
+        Pointer<Utf8> output_buffer,
+        Pointer<IntPtr> output_length)>("snappy_compress");
+
+final snappy_decompress = snappy.lookupFunction<
+    snappy_decompress_func,
+    int Function(
+        Pointer<Utf8> compressed_data,
+        int compressed_length,
+        Pointer<Utf8> output_buffer,
+        Pointer<IntPtr> output_length)>("snappy_decompress");
 
 class WWW extends StatefulWidget {
   const WWW({super.key});
@@ -26,92 +58,165 @@ class WWW extends StatefulWidget {
 }
 
 class _WWWState extends State<WWW> {
+  final controller = Get.put(QueueController());
+
+  @override
+  void initState() {
+    controller;
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
+    void saveList() async {
+      String inputString = "Saya adalah Dayat AJA";
+      Uint8List uint8List = Uint8List.fromList(utf8.encode(inputString));
+      String encodedData = base64Encode(uint8List);
+      print(encodedData);
+    }
+
     return Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          Image.asset('assets/snappy/buy.png'),
+          Center(
+            child: ElevatedButton(
+              onPressed: () {
+                saveList();
+              },
+              child: const Text("SET"),
+            ),
+          ),
+          Center(
+            child: ElevatedButton(
+              onPressed: () {
+                // Contoh kompresi dan dekompresi data
+                // final input =
+                //     'Hello, Snappy!ffkdofkdofkdo kodfkdofkodfko kdofkd odkofkdo kdofk dofkd okdofkodkfod kodk odk ofdkof kdo fkdo kdo kod fkofk od kfodk fodkfo dk odk of';
+                // final compressedBuffer = calloc<Uint8>(1024);
+                // final compressedLength = calloc<IntPtr>();
+
+                // final decompressedBuffer = calloc<Uint8>(1024);
+                // final decompressedLength = calloc<IntPtr>();
+
+                // final inputBuffer = input.toNativeUtf8();
+                // final inputLength = inputBuffer.length;
+
+                // // Kompresi data
+                // var data = snappy_compress(inputBuffer, inputLength,
+                //     compressedBuffer.cast(), compressedLength);
+
+                // Dekompresi data
+                // snappy_decompress(
+                //     compressedBuffer.cast(),
+                //     compressedLength.value,
+                //     decompressedBuffer.cast(),
+                //     decompressedLength);
+
+                // print('Input: $data');
+                // print('Decompressed:  ');
+                // print("dd");
+                // final compressedLength = Snappy.compress(
+                //   nullptr,
+                //   dataToCompress.length,
+                //   nullptr,
+                //   nullptr,
+                // );
+                // final compressedData = calloc<Uint8>(compressedLength);
+
+                final data = "2323";
+                // snappy_compress();
+              },
+              child: const Text("Restart"),
+            ),
+          ),
+          Center(
+            child: ElevatedButton(
+              onPressed: () async {
+                SharedPreferences data = await SharedPreferences.getInstance();
+                data.getString('encodedDataKey');
+                print(data);
+              },
+              child: const Text("GETSTRING"),
+            ),
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Center(
-                child: TextButton(
+                child: ElevatedButton(
                   onPressed: () {
-                    print("LENG: ${reqsss.length}, DATA: $reqsss");
+                    controller.OnBindQT('QT.*.*');
                   },
-                  child: const Text("A"),
+                  child: const Text("BIND QT"),
                 ),
               ),
               Center(
-                child: IconButton(
-                    onPressed: () async {
-                      // ReceivePort receivePort = ReceivePort();
-                      // SendPort sendPort = await receivePort.first;
-
-                      String aa = RandomGenerate.generateRandomTag(14);
-                      dynamic message = makeMassage2.createLoginRequst(
-                        clientTag: aa,
-                        loginId: "Dayat",
-                        loginPassword: "123456",
-                      );
-
-                      // final isolate = await Isolate.spawn(
-                      //     isolateEntryPoint, receivePort.sendPort);
-                      // batas
-                      final receivePort = ReceivePort();
-                      final isolate = await Isolate.spawn(
-                          isolateEntryPoint, receivePort.sendPort);
-                      final sendPort = await receivePort.first;
-
-                      // Send data to the spawned isolate
-
-                      sendPort.send({'aa': aa, 'messs': message});
-                      // batas
-
-                      // ReceivePort receivePort = ReceivePort();
-                      // await Isolate.spawn(
-                      //     isolateFunction, receivePort.sendPort);
-                      // Client sharedConnection = await receivePort.first;
-                      // await sendMessageToRabbitMQ(sharedConnection, message);
-// batas bawh lain
-
-                      // await Isolate.spawn(complexTask2, receivePort.sendPort);
-                      // final receivePort = ReceivePort();
-
-                      // await Isolate.spawn(
-                      //     sendMSG(receivePort.sendPort, aa: aa, messs: messs)
-                      //         as Future<void> Function(SendPort sendPort),
-                      //     receivePort.sendPort);
-
-                      // // Menggunakan for-in loop untuk menerima multiple messages dari isolate
-                      // await for (var message in receivePort) {
-                      //   print('Total: $message');
-                      // }
-                      // final receivePort = ReceivePort();
-                      // final isolate = await Isolate.spawn(
-                      //     isolateEntryPoint, receivePort.sendPort);
-                      // final sendPort = await receivePort.first;
-
-                      // // Send data to the isolate
-                      // sendPort.send(aa, messs);
-                    },
-                    icon: const Icon(Icons.account_balance)),
+                child: ElevatedButton(
+                  onPressed: () {
+                    RabbitMqConnection.exchangesrealtime('RT.*.*');
+                  },
+                  child: const Text("BIND RT"),
+                ),
               ),
               Center(
-                child: TextButton(
+                child: ElevatedButton(
                   onPressed: () {
-                    queuesRequest.addQueue(makeMassage2.createLoginRequst(
-                        clientTag: clientTag,
-                        loginId: "Dayat",
-                        loginPassword: "123456"));
+                    RabbitMqConnection.removeQueue();
+                    RabbitMqConnection.removeQueueReq();
+                  },
+                  child: const Text("REMOVE QUEUE"),
+                ),
+              ),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    RabbitMqConnection.exchangesrealtimeUnbind('QT.*.*');
+                  },
+                  child: const Text("UNBIND QT"),
+                ),
+              ),
+              Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    RabbitMqConnection.exchangesrealtimeUnbind('RT.*.*');
+                    // queuesRequest.addQueue(makeMassage2.createLoginRequst(
+                    //     clientTag: clientTag,
+                    //     loginId: "Dayat",
+                    //     loginPassword: "123456"));
 
+                    // queuesRequest.addQueue(makeMassage2.makeMassages(
+                    //     clientTag, Constans.PACKAGE_ID_BROKER_LIST));
+                  },
+                  child: const Text("UNBIND RT"),
+                ),
+              ),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    // queuesRequest.addQueue(makeMassage2.createLoginRequst(
+                    //     clientTag: clientTag,
+                    //     loginId: "Dayat",
+                    //     loginPassword: "123456"));
                     queuesRequest.addQueue(makeMassage2.makeMassages(
                         clientTag, Constans.PACKAGE_ID_BROKER_LIST));
                   },
-                  child: Text("B"),
+                  child: const Text("BROKER LIST"),
                 ),
               ),
             ],
@@ -120,67 +225,142 @@ class _WWWState extends State<WWW> {
       ),
     );
   }
-}
+}      // queuesRequest.addQueue(makeMassage2.createLoginRequst(
+                    //     clientTag: clientTag,
+                    //     loginId: "Dayat",
+                    //     loginPassword: "123456"));
 
-void isolateEntryPoint(SendPort sendPort) async {
-  await RabbitMqConnection.getInstance();
-  final receivePort = ReceivePort();
-  sendPort.send(receivePort.sendPort);
-  receivePort.listen(
-    (message) {
-      final aa = message['aa'];
-      final messs = message['messs'];
+                    // queuesRequest.addQueue(makeMassage2.makeMassages(
+                    //     clientTag, Constans.PACKAGE_ID_BROKER_LIST));
+     // Center(
+              //   child: IconButton(
+              //       onPressed: () async {
+              //         // ReceivePort receivePort = ReceivePort();
+              //         // SendPort sendPort = await receivePort.first;
 
-      for (int i = 0; i < 1; i++) {
-        RabbitMqConnection.sendnreceivemassage(messs, aa);
-      }
-    },
-  );
-}
+              //         String aa = RandomGenerate.generateRandomTag(14);
+              //         dynamic message = makeMassage2.createLoginRequst(
+              //           clientTag: aa,
+              //           loginId: "Dayat",
+              //           loginPassword: "123456",
+              //         );
 
-Future<Channel> createSharedConnection() async {
-  // Ganti URL dengan URL RabbitMQ yang sesuai
+              //         // final isolate = await Isolate.spawn(
+              //         //     isolateEntryPoint, receivePort.sendPort);
+              //         // batas
+              //         final receivePort = ReceivePort();
+              //         final isolate = await Isolate.spawn(
+              //             isolateEntryPoint, receivePort.sendPort);
+              //         final sendPort = await receivePort.first;
 
-  String host = "10.249.250.137";
-  int port = 5672;
+              //         // Send data to the spawned isolate
 
-  String username = 'user';
-  String password = 'user';
+              //         sendPort.send({'aa': aa, 'messs': message});
+              //       },
+              //       icon: const Icon(Icons.account_balance)),
+              // ),
+              // Center(
+              //   child: TextButton(
+              //     onPressed: () {
+              //       queuesRequest.addQueue(makeMassage2.createLoginRequst(
+              //           clientTag: clientTag,
+              //           loginId: "Dayat",
+              //           loginPassword: "123456"));
 
-  final Client client = Client(
-      settings: ConnectionSettings(
-    host: host,
-    port: port,
-    authProvider: AmqPlainAuthenticator(username, password),
-  ));
+              //       queuesRequest.addQueue(makeMassage2.makeMassages(
+              //           clientTag, Constans.PACKAGE_ID_BROKER_LIST));
+              //     },
+              //     child: Text("B"),
+              //   ),
+              // ),
+              // GetBuilder<Controller>(
+              //     init: Controller(),
+              //     // You can initialize your controller here the first time. Don't use init in your other GetBuilders of same controller
+              //     builder: (_) => Text(
+              //           'clicks: ${_.count}',
+              //         )),
+              // IconButton(
+              //     onPressed: () {
+              //       Get.find<Controller>().increment();
+              //     },
+              //     icon: Icon(Icons.abc)),
+              // GetBuilder<Controller>(
+              //     init: Controller(),
+              //     // You can initialize your controller here the first time. Don't use init in your other GetBuilders of same controller
+              //     builder: (_) => _.isViss == false
+              //         ? Icon(Icons.abc)
+              //         : Icon(Icons.ac_unit)),
+// class Controller extends GetxController {
+//   int count = 0;
+//   bool isViss = true;
+//   void increment() {
+//     count++;
 
-  return await client.connect();
-}
+//     isViss = !isViss;
+//     // use update method to update all count variables
+//     update();
+//   }
+// }
 
-Future<void> sendMessageToRabbitMQ(dynamic message, Client con) async {
-  final Channel connection = await con.channel();
-  Exchange exchange = await connection.exchange(
-    Constans.EXCHANGE_NAME_REQUEST,
-    Constans.EXCHANGE_TYPE_REQUEST,
-  );
-  Queue queue = await connection.queue(clientTag);
+// void isolateEntryPoint(SendPort sendPort) async {
+//   await RabbitMqConnection.getInstance();
+//   final receivePort = ReceivePort();
+//   sendPort.send(receivePort.sendPort);
+//   receivePort.listen(
+//     (message) {
+//       final aa = message['aa'];
+//       final messs = message['messs'];
 
-  await queue.bind(exchange, clientTag);
-  exchange.publish(message, Constans.QUEUE_NAME_REQUEST);
-  await queue
-      .consume(noAck: true)
-      .then((Consumer value) => value.listen((AmqpMessage M) {
-            print(M.routingKey);
-            responqueue.add(M.payload);
-            Uint8List UI = Uint8List.view(M.payload!.buffer);
-            PackageHeaders(buf: UI);
-          }));
-}
+//       for (int i = 0; i < 1; i++) {
+//         RabbitMqConnection.sendnreceivemassage(messs, aa);
+//       }
+//     },
+//   );
+// }
 
-void isolateFunction(SendPort sendPort) async {
-  Channel connection = await createSharedConnection();
-  sendPort.send(connection);
-}
+// Future<Channel> createSharedConnection() async {
+//   // Ganti URL dengan URL RabbitMQ yang sesuai
+
+//   String host = "10.249.250.137";
+//   int port = 5672;
+
+//   String username = 'user';
+//   String password = 'user';
+
+//   final Client client = Client(
+//       settings: ConnectionSettings(
+//     host: host,
+//     port: port,
+//     authProvider: AmqPlainAuthenticator(username, password),
+//   ));
+
+//   return await client.connect();
+// }
+
+// Future<void> sendMessageToRabbitMQ(dynamic message, Client con) async {
+//   final Channel connection = await con.channel();
+//   Exchange exchange = await connection.exchange(
+//     Constans.EXCHANGE_NAME_REQUEST,
+//     Constans.EXCHANGE_TYPE_REQUEST,
+//   );
+//   Queue queue = await connection.queue(clientTag);
+
+//   await queue.bind(exchange, clientTag);
+//   exchange.publish(message, Constans.QUEUE_NAME_REQUEST);
+//   await queue
+//       .consume(noAck: true)
+//       .then((Consumer value) => value.listen((AmqpMessage M) {
+//             print(M.routingKey);
+//             responqueue.add(M.payload);
+//             Uint8List UI = Uint8List.view(M.payload!.buffer);
+//             PackageHeaders(buf: UI);
+//           }));
+// }
+
+// void isolateFunction(SendPort sendPort) async {
+//   Channel connection = await createSharedConnection();
+//   sendPort.send(connection);
+// }
 
 
 

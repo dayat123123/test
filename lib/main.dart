@@ -1,9 +1,11 @@
 import 'dart:async';
-import 'dart:isolate';
+
 import 'package:coba_coba/helper/genrandomClientag.dart';
 import 'package:coba_coba/homeview.dart';
-import 'package:coba_coba/makemessage.dart';
 
+import 'package:coba_coba/makemessage.dart';
+import 'package:coba_coba/pageview/homeview.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:coba_coba/singleton_connection.dart';
 import 'package:flutter/material.dart';
 
@@ -20,6 +22,7 @@ void main() async {
   mess = makeMassage2.createLoginRequst(
       clientTag: clientTag, loginId: "Dayat", loginPassword: "123456");
   clientTag = RandomGenerate.generateRandomTag(14);
+  await ScreenUtil.ensureScreenSize();
   runApp(const MyApp());
 }
 
@@ -28,15 +31,22 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const WWW(),
-    );
+    return ScreenUtilInit(
+        designSize: const Size(360, 690),
+        minTextAdapt: true,
+        splitScreenMode: true,
+        builder: (ctx, child) {
+          ScreenUtil.init(ctx);
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'Flutter Demo',
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+              useMaterial3: true,
+            ),
+            home: const WWW(),
+          );
+        });
   }
 }
 
@@ -103,3 +113,4 @@ class MyApp extends StatelessWidget {
 //     return makeMassages;
 //   }
 // }
+ 

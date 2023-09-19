@@ -1,9 +1,4 @@
-import 'package:coba_coba/main.dart';
-import 'package:coba_coba/makemessage.dart';
-import 'package:coba_coba/queueController/requestQueue.dart';
 import 'package:flutter/material.dart';
-
-import 'constant.dart';
 
 class OtherPage extends StatelessWidget {
   const OtherPage({super.key});
